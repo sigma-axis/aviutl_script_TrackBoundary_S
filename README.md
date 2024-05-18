@@ -1,8 +1,16 @@
 # aviutl_script_TrackBoundary_S
 
-塗りつぶし2種 / 連結成分の抜き出し / 穴埋めができる AviUtl アニメーション効果スクリプト．
+塗りつぶし2種 / 連結成分切り抜き / 穴埋めができる AviUtl アニメーション効果スクリプト．
 
-TODO: some GIFs.
+![色領域塗りつぶし](https://github.com/sigma-axis/aviutl_script_TrackBoundary_S/assets/132639613/258f10f2-518d-4cd7-98a8-c9f5ff13028e)
+
+![透明領域塗りつぶし](https://github.com/sigma-axis/aviutl_script_TrackBoundary_S/assets/132639613/87443efe-e1f7-41f4-ab4d-44ae1e4b3cb3)
+
+![連結成分切り抜き](https://github.com/sigma-axis/aviutl_script_TrackBoundary_S/assets/132639613/f691f693-4370-487c-b5e7-5071949f7821)
+
+![穴埋め](https://github.com/sigma-axis/aviutl_script_TrackBoundary_S/assets/132639613/b010a95f-900a-4d26-8979-4674b9dc8718)
+
+![穴埋め応用例](https://github.com/sigma-axis/aviutl_script_TrackBoundary_S/assets/132639613/ea8521f0-1060-438e-b883-d36e9466721e)
 
 ## 動作要件
 
@@ -42,7 +50,7 @@ TODO: some GIFs.
 
 アンカーで指定した点を含む，透明度を境とした連結成分以外を隠します．「反転」のチェックを入れると逆に指定した連結成分のみを隠します．
 
-TODO: some GIF.
+![連結成分切り抜き](https://github.com/sigma-axis/aviutl_script_TrackBoundary_S/assets/132639613/f691f693-4370-487c-b5e7-5071949f7821)
 
 - `X`, `Y`（トラックバー）
 
@@ -86,7 +94,7 @@ TODO: some GIF.
 
 アンカーで指定した点を含む，近い色の領域を指定色で塗りつぶします．塗りつぶさずに透明 / 半透明に切り抜いたり，逆に指定した色領域以外を透明にしたりもできます．
 
-TODO: some GIF.
+![色領域塗りつぶし](https://github.com/sigma-axis/aviutl_script_TrackBoundary_S/assets/132639613/258f10f2-518d-4cd7-98a8-c9f5ff13028e)
 
 - `不透明度`（トラックバー）
 
@@ -151,7 +159,7 @@ TODO: some GIF.
 
 アンカーで指定した点を含む透明領域を指定色で塗りつぶします．
 
-TODO: some GIFs.
+![透明領域塗りつぶし](https://github.com/sigma-axis/aviutl_script_TrackBoundary_S/assets/132639613/87443efe-e1f7-41f4-ab4d-44ae1e4b3cb3)
 
 - `X`, `Y`（トラックバー）
 
@@ -194,9 +202,12 @@ TODO: some GIFs.
 
 画像外枠に接していない透明領域を不透明にしたり指定色で塗りつぶしたりできます．逆に画像外枠に接している透明領域のみを不透明にすることもできます．
 
+![穴埋め](https://github.com/sigma-axis/aviutl_script_TrackBoundary_S/assets/132639613/b010a95f-900a-4d26-8979-4674b9dc8718)
+
 カラーキーなどのフィルタ効果を適用して外側の縁を消去した際，内側に巻き添えで空いてしまった穴を塞ぐ目的で作成しました．その目的の影響もあって，完全不透明で本来が無意味のはずの色成分が見えるようになるため注意してください．
 
-TODO: some GIFs
+![穴埋め応用例](https://github.com/sigma-axis/aviutl_script_TrackBoundary_S/assets/132639613/ea8521f0-1060-438e-b883-d36e9466721e)
+
 
 - `不透明度`（トラックバー）
 
@@ -252,7 +263,7 @@ TODO: some GIFs
 
     - 標準描画や拡張描画による座標指定や拡大率，回転に関しては問題ありません．
 
-1.  [色領域塗りつぶし](#色領域塗りつぶし)は，機能面では [連結成分切り抜き](#連結成分切り抜き)の上位互換です．
+1.  [色領域塗りつぶし](#色領域塗りつぶし)は，機能面では[連結成分切り抜き](#連結成分切り抜き)の上位互換です．
 
     色領域塗りつぶしの `色範囲` を最大にして `着色強さ` と `前景α値(%)` を `0` にすれば連結成分切り抜きと同じ効果が得られます．`不透明度` と `前景α値(%)` を入れ替えれば `反転` も可能です．
 
