@@ -10,9 +10,9 @@
 
   ![透明領域塗りつぶし](https://github.com/sigma-axis/aviutl_script_TrackBoundary_S/assets/132639613/87443efe-e1f7-41f4-ab4d-44ae1e4b3cb3)
 
-- 色領域塗りつぶし
+- 連結成分切り抜き
 
-  ![色領域塗りつぶし](https://github.com/sigma-axis/aviutl_script_TrackBoundary_S/assets/132639613/f691f693-4370-487c-b5e7-5071949f7821)
+  ![連結成分切り抜き](https://github.com/sigma-axis/aviutl_script_TrackBoundary_S/assets/132639613/f691f693-4370-487c-b5e7-5071949f7821)
 
 - 穴埋め
 
