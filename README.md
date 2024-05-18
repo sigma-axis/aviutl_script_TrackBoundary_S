@@ -1,16 +1,25 @@
-# aviutl_script_TrackBoundary_S
+# TrackBoundary_S AviUtl スクリプト
 
 塗りつぶし2種 / 連結成分切り抜き / 穴埋めができる AviUtl アニメーション効果スクリプト．
 
-![色領域塗りつぶし](https://github.com/sigma-axis/aviutl_script_TrackBoundary_S/assets/132639613/258f10f2-518d-4cd7-98a8-c9f5ff13028e)
+- 色領域塗りつぶし
 
-![透明領域塗りつぶし](https://github.com/sigma-axis/aviutl_script_TrackBoundary_S/assets/132639613/87443efe-e1f7-41f4-ab4d-44ae1e4b3cb3)
+  ![色領域塗りつぶし](https://github.com/sigma-axis/aviutl_script_TrackBoundary_S/assets/132639613/258f10f2-518d-4cd7-98a8-c9f5ff13028e)
 
-![連結成分切り抜き](https://github.com/sigma-axis/aviutl_script_TrackBoundary_S/assets/132639613/f691f693-4370-487c-b5e7-5071949f7821)
+- 透明領域塗りつぶし
 
-![穴埋め](https://github.com/sigma-axis/aviutl_script_TrackBoundary_S/assets/132639613/b010a95f-900a-4d26-8979-4674b9dc8718)
+  ![透明領域塗りつぶし](https://github.com/sigma-axis/aviutl_script_TrackBoundary_S/assets/132639613/87443efe-e1f7-41f4-ab4d-44ae1e4b3cb3)
 
-![穴埋め応用例](https://github.com/sigma-axis/aviutl_script_TrackBoundary_S/assets/132639613/ea8521f0-1060-438e-b883-d36e9466721e)
+- 色領域塗りつぶし
+
+  ![色領域塗りつぶし](https://github.com/sigma-axis/aviutl_script_TrackBoundary_S/assets/132639613/f691f693-4370-487c-b5e7-5071949f7821)
+
+- 穴埋め
+
+  ![穴埋め](https://github.com/sigma-axis/aviutl_script_TrackBoundary_S/assets/132639613/b010a95f-900a-4d26-8979-4674b9dc8718)
+
+  ![穴埋め応用例](https://github.com/sigma-axis/aviutl_script_TrackBoundary_S/assets/132639613/ea8521f0-1060-438e-b883-d36e9466721e)
+
 
 ## 動作要件
 
@@ -310,11 +319,13 @@
       - 「角で隣接扱い」のオプションがあります．
       - パラメタインジェクションができます．
 
+
 ## 改版履歴
 
 - **v1.00** (2024-05-??)
 
   初版．
+
 
 ## ライセンス
 
@@ -334,6 +345,7 @@ THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR I
 
 https://mit-license.org/
 
+
 # Credits
 
 ## Lua 5.1/5.2
@@ -351,6 +363,7 @@ Permission is hereby granted, free of charge, to any person obtaining a copy of 
 The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE. 
+
 
 ## LuaJIT
 
