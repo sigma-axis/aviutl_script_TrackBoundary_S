@@ -44,7 +44,7 @@ jobs:
         echo "### 更新内容" >> ReleaseNotes.txt
         phase=0
         IFS=$'\n'
-        cat artifacts/README.md | while read line; do
+        cat pack/README.md | while read line; do
           if [[ $phase == 0 ]]; then
             if [[ $line =~ ^##*[[:space:]]{1,}'改版履歴'[[:space:]]*$ ]]; then phase=1; fi
           elif [[ $phase == 1 ]]; then
