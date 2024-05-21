@@ -24,7 +24,7 @@ https://mit-license.org/
 ]]
 
 --
--- VERSION: v1.00
+-- VERSION: v1.01
 --
 
 --------------------------------
@@ -126,13 +126,13 @@ local function figure_outer_boundary(xp,yp, w,h, buf,flg, advance,is_inner,...)
 	-- finds the outer boundary containing (xp, yp) inside, and returns its bounding box.
 	local bd_l,bd_t,bd_r,bd_b=xp,yp,xp-1,yp-1;
 	if 0<=xp and xp<w and 0<=yp and yp<h and is_inner(buf,xp+yp*w,...) then
-		local x = xp;
+		local x,y = xp,yp;
 		while true do
 			-- find a point on a path nearby.
-			while x>0 and is_inner(buf,x-1+yp*w,...) do x=x-1 end
+			while x>0 and is_inner(buf,x-1+y*w,...) do x=x-1 end
 
 			-- determine the path and see if it surrounds the point (xp, yp).
-			local X,Y,dir,cw = x, yp, 0, 0;
+			local X,Y,dir,cw,ym = x, y, 0, 0,y;
 			repeat
 				X,Y,dir = advance(X,Y,dir, w,h, buf,is_inner,...);
 
@@ -141,23 +141,24 @@ local function figure_outer_boundary(xp,yp, w,h, buf,flg, advance,is_inner,...)
 				elseif dir == 2 then flg[X+Y*w] = -1 end
 
 				-- surround check.
-				if Y == yp and dir%2==0 then
+				if Y == y and dir%2==0 then
 					-- increment / decrement cw, which will be non-zero
-					-- at the end of the path if it surrounds (x-1, yp).
+					-- at the end of the path if it surrounds (x-1, y).
 					cw = cw + (X>=x and dir-1 or 1-dir);
 				end
 
 				-- update the bounding box.
-				bd_l=math_min(bd_l,X); bd_r=math_max(bd_r,X);
+				if bd_l > X then bd_l = X; ym = Y end
+				bd_r=math_max(bd_r,X);
 				bd_t=math_min(bd_t,Y); bd_b=math_max(bd_b,Y);
-			until X==x and Y==yp and dir==0;
+			until X==x and Y==y and dir==0;
 
-			-- if the path doesn't surround (x-1, yp),
+			-- if the path doesn't surround (x-1, y),
 			-- which means it surrounds (xp, yp) as desired so exit the loop.
 			if cw == 0 then break end
 
-			-- skip the inner part of the path.
-			repeat x=x-1 until x<=0 or flg[x-1+yp*w]~=0;
+			-- skip to the left-most point of the path.
+			x,y = bd_l,ym;
 		end
 	end
 	return bd_l,bd_t,bd_r,bd_b;
