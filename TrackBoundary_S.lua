@@ -24,7 +24,7 @@ https://mit-license.org/
 ]]
 
 --
--- VERSION: v1.01
+-- VERSION: v1.10-beta1
 --
 
 --------------------------------
@@ -392,6 +392,78 @@ local function extract_part(xp,yp,thresh, conn_corner, alpha,inv)
 	obj.putpixeldata(buf0);
 end
 
+--@連結成分切り抜き(複数)
+--track0:指定数,0,16,1,1
+--track1:内側α値,0,100,100
+--track2:外側α値,0,100,0
+--track3:αしきい値,0,100,0
+--check0:反転,0
+--dialog:位置,_1={0,0};角で隣接扱い/chk,_2=1;PI,_0=nil;
+local function extract_part_mult(num_pts,pts,pts_adj, thresh,conn_corner, alpha_in,alpha_out)
+	-- check / normalize arguments.
+	alpha_in = math_min(math_max(alpha_in/100,0),1);
+	alpha_out = math_min(math_max(alpha_out/100,0),1);
+	if num_pts == 0 or alpha_in == alpha_out then return push_alpha(alpha_out) end
+
+	thresh = 1+math.floor(253/99.9*(math_min(math_max(thresh,0),100)-0.1));
+	local advance_boundary = conn_corner and advance_boundary_1 or advance_boundary_2;
+
+	-- prepare buffer.
+	local buf0,w,h = obj.getpixeldata();
+	local flg0 = obj.getpixeldata("work");
+	local buf,flg = ffi.cast("uint8_t*",buf0),ffi.cast("int8_t*",flg0);
+	buf = buf + 3; -- alpha channel.
+	ffi.fill(flg, w * h);
+	-- flg: 0->none, 1->left (but not right) edge of a closed path, -1->either left or right.
+
+	-- centralize the given points pts.
+	for i=1,num_pts do
+		pts[2*i-1],pts[2*i] = transform_anchor(
+			pts_adj and pts_adj[2*i-1] or pts[2*i-1],
+			pts_adj and pts_adj[2*i] or pts[2*i], w,h);
+	end
+
+	-- identify the paths surrounding points in pts and their bounding box.
+	local bd_l,bd_t,bd_r,bd_b=w,h,-1,-1;
+	for i=1,num_pts do
+		local l,t,r,b=figure_outer_boundary(pts[2*i-1],pts[2*i],w,h,
+			buf,flg,advance_boundary,is_opaque,thresh);
+		if l <= r and t <= b then
+			bd_l = math.min(bd_l,l); bd_t = math.min(bd_t,t);
+			bd_r = math.max(bd_r,r); bd_b = math.max(bd_b,b);
+		end
+	end
+
+	-- early return when the image has no pixels to process.
+	if bd_l>bd_r then return push_alpha(alpha_out) end
+
+	-- traverse throughout pixels.
+	local detect_inner = alpha_in >= 1 and detect_inner_boundary or detect_inner_boundary_cpx;
+	if alpha_out < 1 then bd_l,bd_t,bd_r,bd_b=0,0,w-1,h-1 end
+	for y=bd_t,bd_b do local x=bd_l; while x<=bd_r do
+		if flg[x+y*w] ~= 0 then
+			-- process the targeted area.
+			while true do
+				-- push alpha to inner pixels.
+				buf[4*(x+y*w)] = 0.5 + alpha_in*buf[4*(x+y*w)];
+				if flg[x+y*w] < 0 then break end
+				x=x+1;
+
+				if detect_inner(x,y, w,h, buf,flg, advance_boundary,is_opaque,thresh) then
+					break;
+				end
+			end
+		else
+			-- push alpha to outbounds.
+			buf[4*(x+y*w)] = 0.5 + alpha_out*buf[4*(x+y*w)];
+		end
+		x=x+1;
+	end end
+
+	-- place the buffer back to obj.
+	obj.putpixeldata(buf0);
+end
+
 --@透明領域塗りつぶし
 --track0:X,-2000,2000,0,1
 --track1:Y,-2000,2000,0,1
@@ -580,6 +652,7 @@ end
 return {
 	fill_holes=fill_holes,
 	extract_part = extract_part,
+	extract_part_mult = extract_part_mult,
 	flood_fill = flood_fill,
 	flood_fill_col = flood_fill_col,
 };

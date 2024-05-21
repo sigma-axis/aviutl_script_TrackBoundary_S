@@ -24,7 +24,7 @@ https://mit-license.org/
 ]]
 
 --
--- VERSION: v1.00
+-- VERSION: v1.10-beta1
 --
 
 --------------------------------
@@ -44,6 +44,23 @@ obj.setanchor("track",0);
 require"TrackBoundary_S".extract_part(t0,t1,t3,_1==1,t2,c0);
 _0=nil;_1=nil;
 
+@連結成分切り抜き(複数)
+--track0:指定数,0,16,1,1
+--track1:内側α値,0,100,100
+--track2:外側α値,0,100,0
+--track3:αしきい値,0,100,0
+--check0:反転,0
+--dialog:位置,_1={0,0};角で隣接扱い/chk,_2=1;PI,_0=nil;
+local t0,t1,t2,t3,c0,p;
+if _0 then t0=tonumber(_0[1])t1=tonumber(_0[2])t2=tonumber(_0[3])t3=tonumber(_0[4])c0=_0[0]p=_0.pos end
+t0=t0 or obj.track0;t1=t1 or obj.track1;t2=t2 or obj.track2;t3=t3 or obj.track3;
+if c0==nil then c0=obj.check0 else c0=c0~=0 and c0~=false end
+t0=math.min(math.max(math.floor(t0),0),16)
+if t0 > 0 then obj.setanchor("_1",t0) end
+if c0 then t1,t2=t2,t1 end
+require"TrackBoundary_S".extract_part_mult(t0,_1,p,t3,_2==1,t1,t2);
+_0=nil;_1=nil;_2=nil;
+
 @色領域塗りつぶし
 --track0:不透明度,0,100,100
 --track1:着色強さ,0,100,100
@@ -52,7 +69,7 @@ _0=nil;_1=nil;
 --check0:着色で輝度を保持,0
 --dialog:位置,_1={0,0};R範囲補正,_2=1.0;G範囲補正,_3=1.0;B範囲補正,_4=1.0;着色/col,_5=0xffffff;前景α値(%),_6=100;角で隣接扱い/chk,_7=1;PI,_0=nil;
 local t0,t1,t2,t3,c0,p;
-if _0 then t0=tonumber(_0[1]);t1=tonumber(_0[2]);t2=tonumber(_0[3]);t3=tonumber(_0[4]);c0=_0[0];p=_0.pos end
+if _0 then t0=tonumber(_0[1])t1=tonumber(_0[2])t2=tonumber(_0[3])t3=tonumber(_0[4])c0=_0[0]p=_0.pos end
 t0=t0 or obj.track0;t1=t1 or obj.track1;t2=t2 or obj.track2;t3=t3 or obj.track3;
 if c0==nil then c0=obj.check0 else c0=c0~=0 and c0~=false end
 obj.setanchor("_1",1);
@@ -66,7 +83,7 @@ _0=nil;_1=nil;_2=nil;_3=nil;_4=nil;_5=nil;_6=nil;_7=nil;
 --track3:αしきい値,0,100,100
 --dialog:色/col,_1=0xffffff;前景α値(%),_2=100;角で隣接扱い/chk,_3=1;PI,_0=nil;
 local t0,t1,t2,t3;
-if _0 then t0=tonumber(_0[1]);t1=tonumber(_0[2]);t2=tonumber(_0[3]);t3=tonumber(_0[4]) end
+if _0 then t0=tonumber(_0[1])t1=tonumber(_0[2])t2=tonumber(_0[3])t3=tonumber(_0[4]) end
 t0=t0 or obj.track0;t1=t1 or obj.track1;t2=t2 or obj.track2;t3=t3 or obj.track3;
 obj.setanchor("track",0);
 require"TrackBoundary_S".flood_fill(t0,t1,t3,_3==1,tonumber(_1) or 0xffffff,t2,tonumber(_2) or 100);
@@ -80,7 +97,7 @@ _0=nil;_1=nil;_2=nil;_3=nil;
 --check0:外枠埋め,0
 --dialog:色/col,_1=0xffffff;┗輝度の保持/chk,_2=0;角で隣接扱い/chk,_3=1;PI,_0=nil;
 local t0,t1,t2,t3,c0;
-if _0 then t0=tonumber(_0[1]);t1=tonumber(_0[2]);t2=tonumber(_0[3]);t3=tonumber(_0[4]);c0=_0[0] end
+if _0 then t0=tonumber(_0[1])t1=tonumber(_0[2])t2=tonumber(_0[3])t3=tonumber(_0[4])c0=_0[0] end
 t0=t0 or obj.track0;t1=t1 or obj.track1;t2=t2 or obj.track2;t3=t3 or obj.track3;
 if c0==nil then c0=obj.check0 else c0=c0~=0 and c0~=false end
 require"TrackBoundary_S".fill_holes(t3,_3==1,t0,tonumber(_1) or 0xffffff,_2==1,t1,t2,c0);
