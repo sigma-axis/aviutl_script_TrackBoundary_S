@@ -24,7 +24,7 @@ https://mit-license.org/
 ]]
 
 --
--- VERSION: v1.10-beta2
+-- VERSION: v1.10-beta3
 --
 
 --------------------------------
@@ -425,17 +425,16 @@ local function extract_part_mult(num_pts,pts,pts_adj, thresh,conn_corner, alpha_
 	ffi.fill(flg, w * h);
 	-- flg: 0->none, 1->left (but not right) edge of a closed path, -1->either left or right.
 
-	-- centralize the given points pts.
-	for i=1,num_pts do
-		pts[2*i-1],pts[2*i] = transform_anchor(
-			tonumber(pts_adj and pts_adj[2*i-1]) or pts[2*i-1],
-			tonumber(pts_adj and pts_adj[2*i]) or pts[2*i], w,h);
-	end
-
 	-- identify the paths surrounding points in pts and their bounding box.
 	local bd_l,bd_t,bd_r,bd_b=w,h,-1,-1;
 	for i=1,num_pts do
-		local l,t,r,b=figure_outer_boundary(pts[2*i-1],pts[2*i],w,h,
+		-- centralize the given point.
+		local xp, yp = transform_anchor(
+			tonumber(pts_adj and pts_adj[2*i-1]) or pts[2*i-1],
+			tonumber(pts_adj and pts_adj[2*i]) or pts[2*i], w,h);
+
+		-- find and mark the outer boundary.
+		local l,t,r,b=figure_outer_boundary(xp,yp,w,h,
 			buf,flg,advance_boundary,is_opaque,thresh);
 		if l <= r and t <= b then
 			bd_l = math.min(bd_l,l); bd_t = math.min(bd_t,t);
