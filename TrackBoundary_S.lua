@@ -24,7 +24,7 @@ https://mit-license.org/
 ]]
 
 --
--- VERSION: v1.10-beta1
+-- VERSION: v1.10-beta2
 --
 
 --------------------------------
@@ -129,10 +129,13 @@ local function figure_outer_boundary(xp,yp, w,h, buf,flg, advance,is_inner,...)
 		local x,y = xp,yp;
 		while true do
 			-- find a point on a path nearby.
-			while x>0 and is_inner(buf,x-1+y*w,...) do x=x-1 end
+			while x<w-1 and is_inner(buf,x+1+y*w,...) do x=x+1 end
+
+			-- when a boundary is already marked, so is the outer boundary. exit the loop.
+			if flg[x+y*w] < 0 then return 0,0,-1,-1 end
 
 			-- determine the path and see if it surrounds the point (xp, yp).
-			local X,Y,dir,cw,ym = x, y, 0, 0,y;
+			local X,Y,dir,cw,ym = x, y, 2, 0,y;
 			repeat
 				X,Y,dir = advance(X,Y,dir, w,h, buf,is_inner,...);
 
@@ -143,22 +146,22 @@ local function figure_outer_boundary(xp,yp, w,h, buf,flg, advance,is_inner,...)
 				-- surround check.
 				if Y == y and dir%2==0 then
 					-- increment / decrement cw, which will be non-zero
-					-- at the end of the path if it surrounds (x-1, y).
-					cw = cw + (X>=x and dir-1 or 1-dir);
+					-- at the end of the path if it surrounds (x+1, y).
+					cw = cw + (X>x and dir-1 or 1-dir);
 				end
 
 				-- update the bounding box.
-				if bd_l > X then bd_l = X; ym = Y end
-				bd_r=math_max(bd_r,X);
+				bd_l=math_min(bd_l,X);
+				if bd_r < X then bd_r,ym = X,Y end
 				bd_t=math_min(bd_t,Y); bd_b=math_max(bd_b,Y);
-			until X==x and Y==y and dir==0;
+			until X==x and Y==y and dir==2;
 
 			-- if the path doesn't surround (x-1, y),
 			-- which means it surrounds (xp, yp) as desired so exit the loop.
 			if cw == 0 then break end
 
 			-- skip to the left-most point of the path.
-			x,y = bd_l,ym;
+			x,y = bd_r,ym;
 		end
 	end
 	return bd_l,bd_t,bd_r,bd_b;
@@ -242,6 +245,9 @@ end
 --check0:外枠埋め,0
 --dialog:色/col,_1=0xffffff;┗輝度の保持/chk,_2=0;角で隣接扱い/chk,_3=1;PI,_0=nil;
 local function fill_holes(thresh, conn_corner, alpha,col,keep_luma,col_a, front_a, outer)
+	local w,h = obj.getpixel();
+	if w==0 or h==0 then return end
+
 	-- check / normalize arguments.
 	alpha = math_min(math_max(alpha/100,0),1);
 	if alpha <= 0 then return push_alpha(front_a/100) end
@@ -254,8 +260,7 @@ local function fill_holes(thresh, conn_corner, alpha,col,keep_luma,col_a, front_
 	front_a = math_min(math_max(front_a/100,0),1);
 
 	-- prepare buffer.
-	local buf0,w,h = obj.getpixeldata();
-	local flg0 = obj.getpixeldata("work");
+	local buf0,flg0 = obj.getpixeldata(),obj.getpixeldata("work");
 	local buf,flg = ffi.cast("uint8_t*",buf0),ffi.cast("int8_t*",flg0);
 	buf = buf + 3; -- alpha channel.
 	ffi.fill(flg, w * h);
@@ -329,14 +334,16 @@ end
 --check0:反転,0
 --dialog:角で隣接扱い/chk,_1=1;PI,_0=nil;
 local function extract_part(xp,yp,thresh, conn_corner, alpha,inv)
+	local w,h = obj.getpixel();
+	if w==0 or h==0 then return end
+
 	-- check / normalize arguments.
 	thresh = 1+math.floor(253/99.9*(math_min(math_max(thresh,0),100)-0.1));
 	local advance_boundary = conn_corner and advance_boundary_1 or advance_boundary_2;
 	alpha = math_min(math_max(alpha/100,0),1);
 
 	-- prepare buffer.
-	local buf0,w,h = obj.getpixeldata();
-	local flg0 = obj.getpixeldata("work");
+	local buf0,flg0 = obj.getpixeldata(),obj.getpixeldata("work");
 	local buf,flg = ffi.cast("uint8_t*",buf0),ffi.cast("int8_t*",flg0);
 	buf = buf + 3; -- alpha channel.
 	ffi.fill(flg, w * h);
@@ -349,11 +356,11 @@ local function extract_part(xp,yp,thresh, conn_corner, alpha,inv)
 	local bd_l,bd_t,bd_r,bd_b=figure_outer_boundary(xp,yp,w,h,
 		buf,flg,advance_boundary,is_opaque,thresh);
 
+	-- early return when the image has no pixels to process.
+	if bd_l>bd_r then return push_alpha(inv and 1 or alpha) end
+
 	-- traverse throughout pixels.
 	if inv then
-		-- early return when the image has no pixels to process.
-		if bd_l>bd_r then return end
-
 		for y=bd_t,bd_b do local x=bd_l; while x<=bd_r do
 			if flg[x+y*w] ~= 0 then
 				-- process the targeted area.
@@ -400,6 +407,9 @@ end
 --check0:反転,0
 --dialog:位置,_1={0,0};角で隣接扱い/chk,_2=1;PI,_0=nil;
 local function extract_part_mult(num_pts,pts,pts_adj, thresh,conn_corner, alpha_in,alpha_out)
+	local w,h = obj.getpixel();
+	if w==0 or h==0 then return end
+
 	-- check / normalize arguments.
 	alpha_in = math_min(math_max(alpha_in/100,0),1);
 	alpha_out = math_min(math_max(alpha_out/100,0),1);
@@ -409,8 +419,7 @@ local function extract_part_mult(num_pts,pts,pts_adj, thresh,conn_corner, alpha_
 	local advance_boundary = conn_corner and advance_boundary_1 or advance_boundary_2;
 
 	-- prepare buffer.
-	local buf0,w,h = obj.getpixeldata();
-	local flg0 = obj.getpixeldata("work");
+	local buf0,flg0 = obj.getpixeldata(),obj.getpixeldata("work");
 	local buf,flg = ffi.cast("uint8_t*",buf0),ffi.cast("int8_t*",flg0);
 	buf = buf + 3; -- alpha channel.
 	ffi.fill(flg, w * h);
@@ -419,8 +428,8 @@ local function extract_part_mult(num_pts,pts,pts_adj, thresh,conn_corner, alpha_
 	-- centralize the given points pts.
 	for i=1,num_pts do
 		pts[2*i-1],pts[2*i] = transform_anchor(
-			pts_adj and pts_adj[2*i-1] or pts[2*i-1],
-			pts_adj and pts_adj[2*i] or pts[2*i], w,h);
+			tonumber(pts_adj and pts_adj[2*i-1]) or pts[2*i-1],
+			tonumber(pts_adj and pts_adj[2*i]) or pts[2*i], w,h);
 	end
 
 	-- identify the paths surrounding points in pts and their bounding box.
@@ -471,6 +480,9 @@ end
 --track3:αしきい値,0,100,100
 --dialog:色/col,_1=0xffffff;前景α値(%),_2=100;角で隣接扱い/chk,_3=1;PI,_0=nil;
 local function flood_fill(xp,yp,thresh, conn_corner, col,alpha,front_a)
+	local w,h = obj.getpixel();
+	if w==0 or h==0 then return end
+
 	-- check / normalize arguments.
 	alpha = math_min(math_max(alpha/100,0),1);
 	if alpha <= 0 then return push_alpha(front_a/100) end
@@ -481,8 +493,7 @@ local function flood_fill(xp,yp,thresh, conn_corner, col,alpha,front_a)
 	front_a = math_min(math_max(front_a/100,0),1);
 
 	-- prepare buffer.
-	local buf0,w,h = obj.getpixeldata();
-	local flg0 = obj.getpixeldata("work");
+	local buf0,flg0 = obj.getpixeldata(),obj.getpixeldata("work");
 	local buf,flg = ffi.cast("uint8_t*",buf0),ffi.cast("int8_t*",flg0);
 	buf = buf + 3; -- alpha channel.
 	ffi.fill(flg, w * h);
@@ -552,6 +563,9 @@ end
 --check0:着色で輝度を保持,0
 --dialog:位置,_1={0,0};R範囲補正,_2=1.0;G範囲補正,_3=1.0;B範囲補正,_4=1.0;着色/col,_5=0xffffff;前景α値(%),_6=100;角で隣接扱い/chk,_7=1;PI,_0=nil;
 local function flood_fill_col(xp,yp, col_diff,r_diff_coeff,g_diff_coeff,b_diff_coeff,thresh, conn_corner, col,keep_luma,col_a, alpha,front_a)
+	local w,h = obj.getpixel();
+	if w==0 or h==0 then return end
+
 	-- check / normalize arguments.
 	alpha = math_min(math_max(alpha/100,0),1);
 	front_a = math_min(math_max(front_a/100,0),1);
@@ -568,8 +582,7 @@ local function flood_fill_col(xp,yp, col_diff,r_diff_coeff,g_diff_coeff,b_diff_c
 	keep_luma = keep_luma and 1 or 0;
 
 	-- prepare buffer.
-	local buf0,w,h = obj.getpixeldata();
-	local flg0 = obj.getpixeldata("work");
+	local buf0,flg0 = obj.getpixeldata(),obj.getpixeldata("work");
 	local buf,flg = ffi.cast("uint8_t*",buf0),ffi.cast("int8_t*",flg0);
 	ffi.fill(flg, w * h);
 	-- flg: 0->none, 1->left (but not right) edge of a closed path, -1->either left or right.
