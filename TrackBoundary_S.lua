@@ -24,7 +24,7 @@ https://mit-license.org/
 ]]
 
 --
--- VERSION: v1.10-beta4
+-- VERSION: v1.10-beta5
 --
 
 --------------------------------
@@ -45,9 +45,9 @@ local math_min,math_max=math.min,math.max;
 local bit_band=bit.band;
 
 -- determines whether the pixel is to be filled.
-local function is_opaque(buf,I, thresh) return buf[4*I]>thresh end
-local function is_transparent(buf,I, thresh) return not is_opaque(buf,I, thresh) end
-local function color_similar(buf,I, thresh, r_m,g_m,b_m,r_M,g_M,b_M)
+local function is_opaque(I, buf,thresh) return buf[4*I]>thresh end
+local function is_transparent(...) return not is_opaque(...) end
+local function color_similar(I, buf,thresh, r_m,g_m,b_m,r_M,g_M,b_M)
 	return r_m <= buf[0+4*I] and buf[0+4*I] <= r_M
 		and g_m <= buf[1+4*I] and buf[1+4*I] <= g_M
 		and b_m <= buf[2+4*I] and buf[2+4*I] <= b_M
@@ -75,16 +75,16 @@ local delta = {
 };
 
 -- path-tracking function: two corners of inner pixels are considered to be connected.
-local function advance_boundary_1(X,Y,dir, w,h, buf,is_inner,...)
+local function advance_boundary_1(X,Y,dir, w,h, is_inner,...)
 	-- imagine you are walking along a wall, touching your right hand on it.
 	local d = delta[dir+1];
 	local Xt,Yt = X+d[1],Y+d[2];
-	if 0<=Xt and Xt<w and 0<=Yt and Yt<h and is_inner(buf,Xt+Yt*w,...) then
+	if 0<=Xt and Xt<w and 0<=Yt and Yt<h and is_inner(Xt+Yt*w,...) then
 		return Xt,Yt, (dir-1) % 4; -- block in front; turn left.
 	end
 
 	Xt,Yt = X+d[3],Y+d[4];
-	if 0<=Xt and Xt<w and 0<=Yt and Yt<h and is_inner(buf,Xt+Yt*w,...) then
+	if 0<=Xt and Xt<w and 0<=Yt and Yt<h and is_inner(Xt+Yt*w,...) then
 		return Xt,Yt, dir; -- block in front-right; go straight.
 	end
 
@@ -92,27 +92,27 @@ local function advance_boundary_1(X,Y,dir, w,h, buf,is_inner,...)
 end
 
 -- path-tracking function: two corners of inner pixels are considered to be separated.
-local function advance_boundary_2(X,Y,dir, w,h, buf,is_inner,...)
+local function advance_boundary_2(X,Y,dir, w,h, is_inner,...)
 	-- imagine you are walking along a wall, touching your right hand on it.
 	local d = delta[dir+1];
 	local Xt,Yt = X+d[3],Y+d[4];
-	if 0>Xt or Xt>=w or 0>Yt or Yt>=h or not is_inner(buf,Xt+Yt*w,...) then
+	if 0>Xt or Xt>=w or 0>Yt or Yt>=h or not is_inner(Xt+Yt*w,...) then
 		return X,Y, (dir+1) % 4; -- space in front-right; trun right.
 	end
 
 	X,Y,Xt,Yt = Xt,Yt,X+d[1],Y+d[2];
-	if 0>Xt or Xt>=w or 0>Yt or Yt>=h or not is_inner(buf,Xt+Yt*w,...) then
+	if 0>Xt or Xt>=w or 0>Yt or Yt>=h or not is_inner(Xt+Yt*w,...) then
 		return X,Y, dir; -- space in front; go straight.
 	end
 
 	return Xt,Yt, (dir-1) % 4; -- block in front; turn left.
 end
 
-local function detect_boundary(x,y, w,h, buf,flg, advance,is_inner,...)
+local function detect_boundary(x,y, w,h, flg, advance,is_inner,...)
 	-- follow the path until it closes.
 	local X,Y,dir = x, y, 0;
 	repeat
-		X,Y,dir = advance(X,Y,dir, w,h, buf,is_inner,...);
+		X,Y,dir = advance(X,Y,dir, w,h, is_inner,...);
 
 		-- mark the path flag.
 		if dir == 0 and flg[X+Y*w] == 0 then flg[X+Y*w] = 1;
@@ -120,16 +120,16 @@ local function detect_boundary(x,y, w,h, buf,flg, advance,is_inner,...)
 	until X==x and Y==y and dir==0;
 end
 
-local function figure_outer_boundary(xp,yp, w,h, buf,flg, advance,is_inner,...)
+local function figure_outer_boundary(xp,yp, w,h, flg, advance,is_inner,...)
 	-- flg: 0->none, 1->left (but not right) edge of a closed path, -1->either left or right.
 
 	-- finds the outer boundary containing (xp, yp) inside, and returns its bounding box.
 	local bd_l,bd_t,bd_r,bd_b=xp,yp,xp-1,yp-1;
-	if 0<=xp and xp<w and 0<=yp and yp<h and is_inner(buf,xp+yp*w,...) then
+	if 0<=xp and xp<w and 0<=yp and yp<h and is_inner(xp+yp*w,...) then
 		local x,y = xp,yp;
 		while true do
 			-- find a point on a path nearby.
-			while x<w-1 and is_inner(buf,x+1+y*w,...) do x=x+1 end
+			while x<w-1 and is_inner(x+1+y*w,...) do x=x+1 end
 
 			-- when a boundary is already marked, so is the outer boundary. exit the loop.
 			if flg[x+y*w] < 0 then return 0,0,-1,-1 end
@@ -137,7 +137,7 @@ local function figure_outer_boundary(xp,yp, w,h, buf,flg, advance,is_inner,...)
 			-- determine the path and see if it surrounds the point (xp, yp).
 			local X,Y,dir,cw,ym = x, y, 2, 0,y;
 			repeat
-				X,Y,dir = advance(X,Y,dir, w,h, buf,is_inner,...);
+				X,Y,dir = advance(X,Y,dir, w,h, is_inner,...);
 
 				-- mark the path flag.
 				if dir == 0 and flg[X+Y*w] == 0 then flg[X+Y*w] = 1;
@@ -167,12 +167,12 @@ local function figure_outer_boundary(xp,yp, w,h, buf,flg, advance,is_inner,...)
 	return bd_l,bd_t,bd_r,bd_b;
 end
 
-local function detect_inner_boundary(x,y, w,h, buf,flg, advance,is_inner,...)
-	if is_inner(buf, x+y*w, ...) then return false end
+local function detect_inner_boundary(x,y, w,h, flg, advance,is_inner,...)
+	if is_inner(x+y*w,...) then return false end
 
 	local X,Y,dir = x-1,y,2;
 	while X ~= x or Y ~= y - 1 do
-		X,Y,dir = advance(X,Y,dir, w,h, buf,is_inner,...);
+		X,Y,dir = advance(X,Y,dir, w,h, is_inner,...);
 
 		-- mark the path flag.
 		if dir == 0 and flg[X+Y*w] == 0 then flg[X+Y*w] = 1;
@@ -180,10 +180,10 @@ local function detect_inner_boundary(x,y, w,h, buf,flg, advance,is_inner,...)
 	end
 	return true;
 end
-local function detect_inner_boundary_cpx(x,y, w,h, buf,flg, advance,is_inner,...)
+local function detect_inner_boundary_cpx(x,y, w,h, flg, advance,is_inner,...)
 	-- a bit complexed variant of `detect_inner_boundary` that treats
 	-- overwritten pixels as the inner side (whatever current values might be).
-	if is_inner(buf, x+y*w, ...) then return false end
+	if is_inner(x+y*w,...) then return false end
 
 	local X,Y,dir = x-1,y,2;
 	while X ~= x or Y ~= y - 1 do -- the line Y=Y0 had been overwritten, so recognized inner.
@@ -196,11 +196,11 @@ local function detect_inner_boundary_cpx(x,y, w,h, buf,flg, advance,is_inner,...
 		elseif Y == Y0 and dir ~= 2 then
 			-- going along (left; dir = 3) the overwritten pixels.
 			X=X-1;
-			if is_inner(buf, X+(Y+1)*w, ...) then
+			if is_inner(X+(Y+1)*w,...) then
 				-- turn downward (dir = 2), leaving overwritten domain.
 				Y,dir = Y+1,2;
 			end
-		else X,Y,dir = advance(X,Y,dir, w,h, buf,is_inner,...) end
+		else X,Y,dir = advance(X,Y,dir, w,h, is_inner,...) end
 
 		-- mark the path flag.
 		if dir == 0 and flg[X+Y*w] == 0 then flg[X+Y*w] = 1;
@@ -275,8 +275,8 @@ local function fill_holes(thresh, conn_corner, alpha,col,keep_luma,col_a, front_
 					buf[4*(x+y*w)] = 255; -- fully opaque.
 					x = x+1;
 				until flg[x-1+y*w] < 0;
-			elseif not is_opaque(buf, x+y*w, thresh) then x = x+1; -- leave the pixel unchanged.
-			else detect_boundary(x,y, w,h, buf,flg, advance_boundary,is_opaque,thresh) end
+			elseif not is_opaque(x+y*w, buf,thresh) then x = x+1; -- leave the pixel unchanged.
+			else detect_boundary(x,y, w,h, flg, advance_boundary,is_opaque,buf,thresh) end
 		end end
 	else
 		for y = 0, h - 1 do local x = 0 while x < w do
@@ -287,13 +287,13 @@ local function fill_holes(thresh, conn_corner, alpha,col,keep_luma,col_a, front_
 					buf[4*(x+y*w)] = 255-buf[4*(x+y*w)]; -- to fit with "alpha_add".
 					x = x+1;
 				until flg[x-1+y*w] < 0;
-			elseif not is_opaque(buf, x+y*w, thresh) then
+			elseif not is_opaque(x+y*w, buf,thresh) then
 				-- outbound of the image. remove the alpha.
 				buf[4*(x+y*w)] = 0;
 				x = x+1;
 			else
 				-- unmarked closed path is detected.
-				detect_boundary(x,y, w,h, buf,flg, advance_boundary,is_opaque,thresh);
+				detect_boundary(x,y, w,h, flg, advance_boundary,is_opaque,buf,thresh);
 
 				-- leave x un-incremented so `if flg[x+y*w] ~= 0 then` branch is processed.
 			end
@@ -354,7 +354,7 @@ local function extract_part(xp,yp,thresh, conn_corner, alpha,inv)
 
 	-- identify the path surrounding (xp, yp) and its bounding box.
 	local bd_l,bd_t,bd_r,bd_b=figure_outer_boundary(xp,yp,w,h,
-		buf,flg,advance_boundary,is_opaque,thresh);
+		flg, advance_boundary,is_opaque,buf,thresh);
 
 	-- early return when the image has no pixels to process.
 	if bd_l>bd_r then return push_alpha(inv and 1 or alpha) end
@@ -369,7 +369,7 @@ local function extract_part(xp,yp,thresh, conn_corner, alpha,inv)
 					if flg[x+y*w] < 0 then break end
 					x=x+1;
 
-					if detect_inner_boundary_cpx(x,y, w,h, buf,flg, advance_boundary,is_opaque,thresh) then
+					if detect_inner_boundary_cpx(x,y, w,h, flg, advance_boundary,is_opaque,buf,thresh) then
 						break;
 					end
 				end
@@ -382,7 +382,7 @@ local function extract_part(xp,yp,thresh, conn_corner, alpha,inv)
 				while flg[x+y*w] >= 0 do
 					x=x+1;
 
-					if detect_inner_boundary(x,y, w,h, buf,flg, advance_boundary,is_opaque,thresh) then
+					if detect_inner_boundary(x,y, w,h, flg, advance_boundary,is_opaque,buf,thresh) then
 						x = x-1; -- switch to the branch for outside the targeted area.
 						break;
 					end
@@ -438,7 +438,7 @@ local function extract_part_mult(num_pts,pts,pts_adj, thresh,conn_corner, alpha_
 
 		-- find and mark the outer boundary.
 		local l,t,r,b=figure_outer_boundary(xp,yp,w,h,
-			buf,flg,advance_boundary,is_opaque,thresh);
+			flg, advance_boundary,is_opaque,buf,thresh);
 		if l <= r and t <= b then
 			bd_l = math.min(bd_l,l); bd_t = math.min(bd_t,t);
 			bd_r = math.max(bd_r,r); bd_b = math.max(bd_b,b);
@@ -460,7 +460,7 @@ local function extract_part_mult(num_pts,pts,pts_adj, thresh,conn_corner, alpha_
 				if flg[x+y*w] < 0 then break end
 				x=x+1;
 
-				if detect_inner(x,y, w,h, buf,flg, advance_boundary,is_opaque,thresh) then
+				if detect_inner(x,y, w,h, flg, advance_boundary,is_opaque,buf,thresh) then
 					break;
 				end
 			end
@@ -506,7 +506,7 @@ local function flood_fill(xp,yp,thresh, conn_corner, col,alpha,front_a)
 
 	-- identify the path surrounding (xp, yp) and its bounding box.
 	local bd_l,bd_t,bd_r,bd_b=figure_outer_boundary(xp,yp, w,h,
-		buf,flg, advance_boundary,is_transparent,thresh);
+		flg, advance_boundary,is_transparent,buf,thresh);
 
 	-- early return when the image has no pixels to process.
 	if bd_l>bd_r then return push_alpha(front_a) end
@@ -520,7 +520,7 @@ local function flood_fill(xp,yp,thresh, conn_corner, col,alpha,front_a)
 				if flg[x+y*w] < 0 then break end
 				x=x+1;
 
-				if detect_inner_boundary_cpx(x,y, w,h, buf,flg, advance_boundary,is_transparent,thresh) then
+				if detect_inner_boundary_cpx(x,y, w,h, flg, advance_boundary,is_transparent,buf,thresh) then
 					x = x-1; -- switch to the branch for outside the targeted area.
 					break;
 				end
@@ -603,7 +603,7 @@ local function flood_fill_col(xp,yp, col_diff,r_diff_coeff,g_diff_coeff,b_diff_c
 
 	-- identify the path surrounding (xp, yp) and its bounding box.
 	local bd_l,bd_t,bd_r,bd_b=figure_outer_boundary(xp,yp, w,h,
-		buf,flg, advance_boundary,color_similar, thresh,r_m,g_m,b_m,r_M,g_M,b_M)
+		flg, advance_boundary,color_similar, buf,thresh,r_m,g_m,b_m,r_M,g_M,b_M)
 
 	-- early return when the image has no pixels to process.
 	if bd_l>bd_r then return push_alpha(front_a) end
@@ -615,8 +615,8 @@ local function flood_fill_col(xp,yp, col_diff,r_diff_coeff,g_diff_coeff,b_diff_c
 			while flg[x+y*w] >= 0 do
 				x=x+1;
 
-				if detect_inner_boundary(x,y, w,h, buf,flg,
-					advance_boundary,color_similar,thresh,r_m,g_m,b_m,r_M,g_M,b_M) then
+				if detect_inner_boundary(x,y, w,h,
+					flg, advance_boundary,color_similar, buf,thresh,r_m,g_m,b_m,r_M,g_M,b_M) then
 					x = x-1; -- switch to the branch for outside the targeted area.
 					break;
 				end
