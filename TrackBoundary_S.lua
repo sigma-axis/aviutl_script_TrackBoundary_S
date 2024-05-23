@@ -24,7 +24,7 @@ https://mit-license.org/
 ]]
 
 --
--- VERSION: v1.10-beta3
+-- VERSION: v1.10-beta4
 --
 
 --------------------------------
@@ -413,7 +413,8 @@ local function extract_part_mult(num_pts,pts,pts_adj, thresh,conn_corner, alpha_
 	-- check / normalize arguments.
 	alpha_in = math_min(math_max(alpha_in/100,0),1);
 	alpha_out = math_min(math_max(alpha_out/100,0),1);
-	if num_pts == 0 or alpha_in == alpha_out then return push_alpha(alpha_out) end
+	num_pts = math.floor(num_pts);
+	if num_pts <= 0 or alpha_in == alpha_out then return push_alpha(alpha_out) end
 
 	thresh = 1+math.floor(253/99.9*(math_min(math_max(thresh,0),100)-0.1));
 	local advance_boundary = conn_corner and advance_boundary_1 or advance_boundary_2;
@@ -429,9 +430,11 @@ local function extract_part_mult(num_pts,pts,pts_adj, thresh,conn_corner, alpha_
 	local bd_l,bd_t,bd_r,bd_b=w,h,-1,-1;
 	for i=1,num_pts do
 		-- centralize the given point.
-		local xp, yp = transform_anchor(
+		local xp,yp =
 			tonumber(pts_adj and pts_adj[2*i-1]) or pts[2*i-1],
-			tonumber(pts_adj and pts_adj[2*i]) or pts[2*i], w,h);
+			tonumber(pts_adj and pts_adj[2*i  ]) or pts[2*i  ];
+		if not xp and not yp then break end
+		xp, yp = transform_anchor(xp or 0,yp or 0, w,h);
 
 		-- find and mark the outer boundary.
 		local l,t,r,b=figure_outer_boundary(xp,yp,w,h,

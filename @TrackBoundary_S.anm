@@ -24,7 +24,7 @@ https://mit-license.org/
 ]]
 
 --
--- VERSION: v1.10-beta2
+-- VERSION: v1.10-beta4
 --
 
 --------------------------------
@@ -55,8 +55,7 @@ local t0,t1,t2,t3,c0,p;
 if _0 then t0=tonumber(_0[1])t1=tonumber(_0[2])t2=tonumber(_0[3])t3=tonumber(_0[4])c0=_0[0]p=_0.pos end
 t0=t0 or obj.track0;t1=t1 or obj.track1;t2=t2 or obj.track2;t3=t3 or obj.track3;
 if c0==nil then c0=obj.check0 else c0=c0~=0 and c0~=false end
-t0=math.min(math.max(math.floor(t0),0),16);
-if t0 > 0 then obj.setanchor("_1",t0) end
+if obj.track0 >= 1 then obj.setanchor("_1",math.min(obj.track0,16)) end
 if c0 then t1,t2=t2,t1 end
 require"TrackBoundary_S".extract_part_mult(t0,_1,p,t3,_2==1,t1,t2);
 _0=nil;_1=nil;_2=nil;
