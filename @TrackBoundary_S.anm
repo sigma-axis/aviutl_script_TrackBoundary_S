@@ -24,7 +24,7 @@ https://mit-license.org/
 ]]
 
 --
--- VERSION: v1.11
+-- VERSION: v1.20-beta1
 --
 
 --------------------------------
@@ -100,5 +100,53 @@ if _0 then t0=tonumber(_0[1])t1=tonumber(_0[2])t2=tonumber(_0[3])t3=tonumber(_0[
 t0=t0 or obj.track0;t1=t1 or obj.track1;t2=t2 or obj.track2;t3=t3 or obj.track3;
 if c0==nil then c0=obj.check0 else c0=c0~=0 and c0~=false end
 require"TrackBoundary_S".fill_holes(t3,_3==1,t0,tonumber(_1) or 0xffffff,_2==1,t1,t2,c0);
+_0=nil;_1=nil;_2=nil;_3=nil;
+
+@領域クロマキー
+--track0:指定数,0,16,1,1
+--track1:色相範囲,0,256,24,1
+--track2:彩度範囲,0,256,96,1
+--track3:αしきい値,0,100,0
+--check0:反転,0
+--dialog:位置,_1={0,0};透過色/col,_2=0xffffff;境界補正(0-5),_3=1;┗四辺に配慮/chk,_4=1;色彩補正/chk,_5=0;┗透過補正/chk,_6=0;角で隣接扱い/chk,_7=1;PI,_0=nil;
+local t0,t1,t2,t3,c0,p;
+if _0 then t0=tonumber(_0[1])t1=tonumber(_0[2])t2=tonumber(_0[3])t3=tonumber(_0[4])c0=_0[0]p=_0.pos end
+t0=t0 or obj.track0;t1=t1 or obj.track1;t2=t2 or obj.track2;t3=t3 or obj.track3;
+if c0==nil then c0=obj.check0 else c0=c0~=0 and c0~=false end
+t0=math.min(math.max(math.floor(t0),0),16);
+if t0 > 0 then obj.setanchor("_1",t0) end
+require"TrackBoundary_S".conn_chroma_key(t0,_1,p,c0, t3,_7==1, tonumber(_2) or 0xffffff,t1,t2,tonumber(_3) or 1,_5==1,_6==1,_4==1);
+_0=nil;_1=nil;_2=nil;_3=nil;_4=nil;_5=nil;_6=nil;_7=nil;
+
+@領域カラーキー
+--track0:指定数,0,16,1,1
+--track1:輝度範囲,0,4096,0,1
+--track2:色差範囲,0,4096,0,1
+--track3:αしきい値,0,100,0
+--check0:反転,0
+--dialog:位置,_1={0,0};透過色/col,_2=0xffffff;境界補正(0-5),_3=1;┗四辺に配慮/chk,_4=1;角で隣接扱い/chk,_5=1;PI,_0=nil;
+local t0,t1,t2,t3,c0,p;
+if _0 then t0=tonumber(_0[1])t1=tonumber(_0[2])t2=tonumber(_0[3])t3=tonumber(_0[4])c0=_0[0]p=_0.pos end
+t0=t0 or obj.track0;t1=t1 or obj.track1;t2=t2 or obj.track2;t3=t3 or obj.track3;
+if c0==nil then c0=obj.check0 else c0=c0~=0 and c0~=false end
+t0=math.min(math.max(math.floor(t0),0),16);
+if t0 > 0 then obj.setanchor("_1",t0) end
+require"TrackBoundary_S".conn_color_key(t0,_1,p,c0, t3,_5==1, tonumber(_2) or 0xffffff,t1,t2,tonumber(_3) or 1,_4==1);
+_0=nil;_1=nil;_2=nil;_3=nil;_4=nil;_5=nil;
+
+@領域ルミナンスキー
+--track0:指定数,0,16,1,1
+--track1:基準輝度,0,4096,2048,1
+--track2:ぼかし,0,4096,512,1
+--track3:αしきい値,0,100,0
+--check0:反転,0
+--dialog:位置,_1={0,0};タイプ(0-3),_2=0;角で隣接扱い/chk,_3=1;PI,_0=nil;
+local t0,t1,t2,t3,c0,p;
+if _0 then t0=tonumber(_0[1])t1=tonumber(_0[2])t2=tonumber(_0[3])t3=tonumber(_0[4])c0=_0[0]p=_0.pos end
+t0=t0 or obj.track0;t1=t1 or obj.track1;t2=t2 or obj.track2;t3=t3 or obj.track3;
+if c0==nil then c0=obj.check0 else c0=c0~=0 and c0~=false end
+t0=math.min(math.max(math.floor(t0),0),16);
+if t0 > 0 then obj.setanchor("_1",t0) end
+require"TrackBoundary_S".conn_luminance_key(t0,_1,p,c0, t3,_3==1, t1,t2,tonumber(_2) or 0,c0);
 _0=nil;_1=nil;_2=nil;_3=nil;
 

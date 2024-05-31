@@ -24,7 +24,7 @@ https://mit-license.org/
 ]]
 
 --
--- VERSION: v1.11
+-- VERSION: v1.20-beta1
 --
 
 --------------------------------
@@ -42,7 +42,7 @@ end
 local ffi = require"ffi";
 local math,obj = math,obj;
 local math_min,math_max=math.min,math.max;
-local bit_band=bit.band;
+local bit_band,bit_lshift,bit_arshift=bit.band,bit.lshift,bit.arshift;
 
 -- determines whether the pixel is to be filled.
 local function is_opaque(I, buf,thresh) return buf[4*I]>thresh end
@@ -52,6 +52,9 @@ local function color_similar(I, buf,thresh, r_m,g_m,b_m,r_M,g_M,b_M)
 		and g_m <= buf[1+4*I] and buf[1+4*I] <= g_M
 		and b_m <= buf[2+4*I] and buf[2+4*I] <= b_M
 		and buf[3+4*I] > thresh;
+end
+local function alpha_reduced(I, buf,bak,thresh)
+	return bak[3+4*I]-buf[3+4*I] > thresh;
 end
 
 -- `dir` shall mean as, for each targeted pixel,
@@ -226,6 +229,29 @@ local function transform_anchor(xp,yp, w,h)
 	xp=xp+obj.cx-obj.ox+w/2;
 	yp=yp+obj.cy-obj.oy+h/2;
 	return math.floor(xp),math.floor(yp);
+end
+
+-- support for YCA color coordinate.
+local function rgb2yc(r,g,b)
+	r=bit_lshift(r,6)+18; g=bit_lshift(g,6)+18; b=bit_lshift(b,6)+18;
+	return
+		bit_arshift(r* 4918,16)+bit_arshift(g* 9655,16)+bit_arshift(b* 1875,16)-3,
+		bit_arshift(r*-2775,16)+bit_arshift(g*-5449,16)+bit_arshift(b* 8224,16)+1,
+		bit_arshift(r* 8224,16)+bit_arshift(g*-6887,16)+bit_arshift(b*-1337,16)+1;
+end
+local encode_yc do
+	local function swap_bytes(i32)
+		return bit_lshift(bit_band(0x00ff00ff, i32),8)+bit_band(0x00ff00ff, bit_arshift(i32,8));
+	end
+	function encode_yc(y,cb,cr)
+		return ("%04x%08x"):format(swap_bytes(y),swap_bytes(bit_lshift(cb,16)+cr));
+	end
+end
+local function encode_yc_from_rgb(c)
+	return encode_yc(rgb2yc(
+		bit_band(bit_arshift(c,16),0xff),
+		bit_band(bit_arshift(c,8),0xff),
+		bit_band(c,0xff)));
 end
 
 -- used for early returns when essential process can be skipped.
@@ -663,6 +689,179 @@ local function flood_fill_col(xp,yp, col_diff,r_diff_coeff,g_diff_coeff,b_diff_c
 	obj.copybuffer("obj","tmp");
 end
 
+-- common function for key-transparent filters.
+local function conn_key_transparent(num_pts,pts,pts_adj,inv, thresh,conn_corner, func_filter,...)
+	local w,h = obj.getpixel();
+	if w==0 or h==0 then return end
+
+	-- check / normalize arguments.
+	if num_pts == 0 then return end
+
+	thresh = 1+math.floor(253/99.9*(math_min(math_max(thresh,0),100)-0.1));
+	local advance_boundary = conn_corner and advance_boundary_1 or advance_boundary_2;
+
+	-- prepare buffer.
+	local flg = ffi.new("int8_t[?]", w * h);
+	ffi.fill(flg, w * h);
+	-- flg: 0->none, 1->left (but not right) edge of a closed path, -1->either left or right.
+
+	-- cache the current image as RGBA format.
+	local buf0,bak0 = obj.getpixeldata(),obj.getpixeldata("work");
+	ffi.copy(bak0,buf0, 4*w*h);
+
+	-- apply the transparent filter.
+	func_filter(...);
+	buf0 = obj.getpixeldata();
+	local buf,bak = ffi.cast("uint8_t*",buf0),ffi.cast("uint8_t*",bak0);
+	local buf4,bak4 = ffi.cast("uint32_t*",buf0),ffi.cast("uint32_t*",bak0);
+
+	-- identify the paths surrounding points in pts and their bounding box.
+	local bd_l,bd_t,bd_r,bd_b=w,h,-1,-1;
+	for i=1,num_pts do
+		-- centralize the given point.
+		local xp,yp =
+			tonumber(pts_adj and pts_adj[2*i-1]) or pts[2*i-1],
+			tonumber(pts_adj and pts_adj[2*i  ]) or pts[2*i  ];
+		if not xp and not yp then break end
+		xp, yp = transform_anchor(xp or 0,yp or 0, w,h);
+
+		-- find and mark the outer boundary.
+		local l,t,r,b=figure_outer_boundary(xp,yp,w,h,
+			flg, advance_boundary,alpha_reduced,buf,bak,thresh);
+		if l <= r and t <= b then
+			bd_l = math.min(bd_l,l); bd_t = math.min(bd_t,t);
+			bd_r = math.max(bd_r,r); bd_b = math.max(bd_b,b);
+		end
+	end
+
+	if bd_l>bd_r then
+		if not inv then obj.putpixeldata(bak0) end -- rewind back to the original.
+	elseif inv then
+		-- traverse throughout pixels.
+		for y=0,h-1 do local x=0; while x<w do
+			if flg[x+y*w] ~= 0 then
+				while flg[x+y*w] >= 0 do
+					x=x+1;
+
+					if detect_inner_boundary(x,y, w,h, flg,
+						advance_boundary,alpha_reduced,buf,bak,thresh) then
+						x = x-1; -- switch to the branch for outside the targeted area.
+						break;
+					end
+				end
+			else
+				-- apply the filter to outbounds.
+				bak4[x+y*w] = buf4[x+y*w];
+			end
+			x=x+1;
+		end end
+		obj.putpixeldata(bak0);
+	else
+		-- traverse throughout pixels.
+		for y=0,h-1 do local x=0; while x<w do
+			if flg[x+y*w] ~= 0 then
+				while flg[x+y*w] >= 0 do
+					x=x+1;
+
+					if detect_inner_boundary(x,y, w,h, flg,
+						advance_boundary,alpha_reduced,buf,bak,thresh) then
+						x = x-1; -- switch to the branch for outside the targeted area.
+						break;
+					end
+				end
+			else
+				-- rewind outbounds.
+				buf4[x+y*w] = bak4[x+y*w];
+			end
+			x=x+1;
+		end end
+		obj.putpixeldata(buf0);
+	end
+end
+
+local function apply_chroma_key(col, range_chr,range_sat,adjust_bd,adjust_col,adjust_alpha, anti_adjust_bd)
+	-- check / normalize arguments.
+	col = bit_band(0xffffff, col);
+	range_chr = math_min(math_max(range_chr, 0), 256);
+	range_sat = math_min(math_max(range_sat, 0), 256);
+	adjust_bd = math_min(math_max(adjust_bd, 0), 5);
+
+	-- apply chorma key.
+	if anti_adjust_bd and adjust_bd > 0 then
+		obj.effect("領域拡張","左",adjust_bd,"上",adjust_bd,"右",adjust_bd,"下",adjust_bd,"塗りつぶし",1);
+	end
+	obj.effect("クロマキー", "色相範囲",range_chr, "彩度範囲",range_sat,
+		"境界補正",adjust_bd, "色彩補正",adjust_col and 1 or 0, "透過補正",adjust_alpha and 1 or 0,
+		"color_yc",encode_yc_from_rgb(col), "status",1);
+	if anti_adjust_bd and adjust_bd > 0 then
+		obj.effect("クリッピング","左",adjust_bd,"上",adjust_bd,"右",adjust_bd,"下",adjust_bd);
+	end
+end
+
+--@領域クロマキー
+--track0:指定数,0,16,1,1
+--track1:色相範囲,0,256,24,1
+--track2:彩度範囲,0,256,96,1
+--track3:αしきい値,0,100,0
+--check0:反転,0
+--dialog:位置,_1={0,0};透過色/col,_2=0xffffff;境界補正(0-5),_3=1;┗四辺に配慮/chk,_4=1;色彩補正/chk,_5=0;┗透過補正/chk,_6=0;角で隣接扱い/chk,_7=1;PI,_0=nil;
+local function conn_chroma_key(num_pts,pts,pts_adj,inv, thresh,conn_corner, col, range_chr,range_sat,adjust_bd,adjust_col,adjust_alpha, anti_adjust_bd)
+	conn_key_transparent(num_pts,pts,pts_adj,inv, thresh,conn_corner,
+		apply_chroma_key, col, range_chr,range_sat,adjust_bd,adjust_col,adjust_alpha, anti_adjust_bd);
+end
+
+local function apply_color_key(col, range_luma,range_uv,adjust_bd, anti_adjust_bd)
+	-- check / normalize arguments.
+	col = bit_band(0xffffff, col);
+	range_luma = math_min(math_max(range_luma, 0), 4096);
+	range_uv = math_min(math_max(range_uv, 0), 4096);
+	adjust_bd = math_min(math_max(adjust_bd, 0), 5);
+
+	-- apply color key.
+	if anti_adjust_bd and adjust_bd > 0 then
+		obj.effect("領域拡張","左",adjust_bd,"上",adjust_bd,"右",adjust_bd,"下",adjust_bd,"塗りつぶし",1);
+	end
+	obj.effect("カラーキー","輝度範囲",range_luma,"色差範囲",range_uv,"境界補正",adjust_bd,
+		"color_yc",encode_yc_from_rgb(col),"status",1)
+	if anti_adjust_bd and adjust_bd > 0 then
+		obj.effect("クリッピング","左",adjust_bd,"上",adjust_bd,"右",adjust_bd,"下",adjust_bd);
+	end
+end
+
+--@領域カラーキー
+--track0:指定数,0,16,1,1
+--track1:輝度範囲,0,4096,0,1
+--track2:色差範囲,0,4096,0,1
+--track3:αしきい値,0,100,0
+--check0:反転,0
+--dialog:位置,_1={0,0};透過色/col,_2=0xffffff;境界補正(0-5),_3=1;┗四辺に配慮/chk,_4=1;角で隣接扱い/chk,_5=1;PI,_0=nil;
+local function conn_color_key(num_pts,pts,pts_adj,inv, thresh,conn_corner, col, range_luma,range_uv,adjust_bd, anti_adjust_bd)
+	conn_key_transparent(num_pts,pts,pts_adj,inv, thresh,conn_corner,
+		apply_color_key, col, range_luma,range_uv,adjust_bd, anti_adjust_bd);
+end
+
+local function apply_luminance_key(std_luma,range_luma,alg_type)
+	-- check / normalize arguments.
+	std_luma = math_min(math_max(std_luma, 0), 4096);
+	range_luma = math_min(math_max(range_luma, 0), 4096);
+	alg_type = math_min(math_max(alg_type, 0), 3);
+
+	-- apply luminance key.
+	obj.effect("ルミナンスキー","基準輝度",std_luma,"ぼかし",range_luma,"type",alg_type);
+end
+
+--@領域ルミナンスキー
+--track0:指定数,0,16,1,1
+--track1:基準輝度,0,4096,2048,1
+--track2:ぼかし,0,4096,512,1
+--track3:αしきい値,0,100,0
+--check0:反転,0
+--dialog:位置,_1={0,0};タイプ(0-3),_2=0;角で隣接扱い/chk,_3=1;PI,_0=nil;
+local function conn_luminance_key(num_pts,pts,pts_adj,inv, thresh,conn_corner, std_luma,range_luma,alg_type)
+	conn_key_transparent(num_pts,pts,pts_adj,inv, thresh,conn_corner,
+		apply_luminance_key, std_luma,range_luma,alg_type)
+end
+
 -- return the library table.
 return {
 	fill_holes=fill_holes,
@@ -670,4 +869,8 @@ return {
 	extract_part_mult = extract_part_mult,
 	flood_fill = flood_fill,
 	flood_fill_col = flood_fill_col,
+
+	conn_chroma_key = conn_chroma_key,
+	conn_color_key = conn_color_key,
+	conn_luminance_key = conn_luminance_key,
 };
