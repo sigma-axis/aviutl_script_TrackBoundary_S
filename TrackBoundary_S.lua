@@ -233,6 +233,8 @@ end
 
 -- support for YCA color coordinate.
 local function rgb2yc(r,g,b)
+	-- transforms from RGB to YCbCr.
+	-- https://github.com/ePi5131/aviutl_exedit_sdk/blob/834536891cdd087bd2faa5e0b01c78d81d947aee/exedit/pixel.hpp#L30-L40
 	r=bit_lshift(r,6)+18; g=bit_lshift(g,6)+18; b=bit_lshift(b,6)+18;
 	return
 		bit_arshift(r* 4918,16)+bit_arshift(g* 9655,16)+bit_arshift(b* 1875,16)-3,
