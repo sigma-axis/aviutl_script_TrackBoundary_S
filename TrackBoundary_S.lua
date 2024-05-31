@@ -24,7 +24,7 @@ https://mit-license.org/
 ]]
 
 --
--- VERSION: v1.10
+-- VERSION: v1.11
 --
 
 --------------------------------
@@ -332,7 +332,7 @@ end
 --track2:不透明度,0,100,0
 --track3:αしきい値,0,100,0
 --check0:反転,0
---dialog:角で隣接扱い/chk,_1=1;PI,_0=nil;
+--dialog:角で隣接扱い/chk,_1=0;PI,_0=nil;
 local function extract_part(xp,yp,thresh, conn_corner, alpha,inv)
 	local w,h = obj.getpixel();
 	if w==0 or h==0 then return end
@@ -405,7 +405,7 @@ end
 --track2:外側α値,0,100,0
 --track3:αしきい値,0,100,0
 --check0:反転,0
---dialog:位置,_1={0,0};角で隣接扱い/chk,_2=1;PI,_0=nil;
+--dialog:位置,_1={0,0};角で隣接扱い/chk,_2=0;PI,_0=nil;
 local function extract_part_mult(num_pts,pts,pts_adj, thresh,conn_corner, alpha_in,alpha_out)
 	local w,h = obj.getpixel();
 	if w==0 or h==0 then return end
@@ -563,7 +563,7 @@ end
 --track2:色範囲,0,255,8,1
 --track3:αしきい値,0,100,0
 --check0:着色で輝度を保持,0
---dialog:位置,_1={0,0};R範囲補正,_2=1.0;G範囲補正,_3=1.0;B範囲補正,_4=1.0;着色/col,_5=0xffffff;前景α値(%),_6=100;角で隣接扱い/chk,_7=1;PI,_0=nil;
+--dialog:位置,_1={0,0};R範囲補正,_2=1.0;G範囲補正,_3=1.0;B範囲補正,_4=1.0;着色/col,_5=0xffffff;前景α値(%),_6=100;角で隣接扱い/chk,_7=0;PI,_0=nil;
 local function flood_fill_col(xp,yp, col_diff,r_diff_coeff,g_diff_coeff,b_diff_coeff,thresh, conn_corner, col,keep_luma,col_a, alpha,front_a)
 	local w,h = obj.getpixel();
 	if w==0 or h==0 then return end
