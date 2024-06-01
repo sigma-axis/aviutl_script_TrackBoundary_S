@@ -24,7 +24,7 @@ https://mit-license.org/
 ]]
 
 --
--- VERSION: v1.21
+-- VERSION: v1.22
 --
 
 --------------------------------
@@ -772,24 +772,24 @@ local function apply_chroma_key(col, range_chr,range_sat,adjust_bd,adjust_col,ad
 	col = bit_band(0xffffff, col);
 	range_chr = math_min(math_max(range_chr, 0), 256);
 	range_sat = math_min(math_max(range_sat, 0), 256);
-	adjust_bd = math.floor(math_min(math_max(adjust_bd, 0), 5));
+	adjust_bd = math_min(math_max(adjust_bd, 0), 5);
 
 	-- take maximum size of image into account.
 	local anti_adjust_bd_sz = 0;
-	if anti_adjust_bd and adjust_bd > 0 then
-		local w,h = obj.getpixel(); local mx,my = obj.getinfo("image_max");
-		anti_adjust_bd_sz = math.floor(math_min(adjust_bd, (mx-w)/2, (my-h)/2));
+	if anti_adjust_bd and adjust_bd >= 1 then
+		local w,h = obj.getpixel(); local W,H = obj.getinfo("image_max");
+		anti_adjust_bd_sz = math_min(adjust_bd, (W-w)/2, (H-h)/2);
 	end
 
 	-- apply chorma key.
-	if anti_adjust_bd_sz > 0 then
-		obj.effect("領域拡張","左",adjust_bd,"上",adjust_bd,"右",adjust_bd,"下",adjust_bd,"塗りつぶし",1);
+	if anti_adjust_bd_sz >= 1 then
+		obj.effect("領域拡張","左",anti_adjust_bd_sz,"上",anti_adjust_bd_sz,"右",anti_adjust_bd_sz,"下",anti_adjust_bd_sz,"塗りつぶし",1);
 	end
 	obj.effect("クロマキー", "色相範囲",range_chr, "彩度範囲",range_sat,
 		"境界補正",adjust_bd, "色彩補正",adjust_col and 1 or 0, "透過補正",(adjust_col and adjust_alpha) and 1 or 0,
 		"color_yc",encode_yc_from_rgb(col), "status",1);
-	if anti_adjust_bd_sz > 0 then
-		obj.effect("クリッピング","左",adjust_bd,"上",adjust_bd,"右",adjust_bd,"下",adjust_bd);
+	if anti_adjust_bd_sz >= 1 then
+		obj.effect("クリッピング","左",anti_adjust_bd_sz,"上",anti_adjust_bd_sz,"右",anti_adjust_bd_sz,"下",anti_adjust_bd_sz);
 	end
 end
 
@@ -810,23 +810,23 @@ local function apply_color_key(col, range_luma,range_uv,adjust_bd, anti_adjust_b
 	col = bit_band(0xffffff, col);
 	range_luma = math_min(math_max(range_luma, 0), 4096);
 	range_uv = math_min(math_max(range_uv, 0), 4096);
-	adjust_bd = math.floor(math_min(math_max(adjust_bd, 0), 5));
+	adjust_bd = math_min(math_max(adjust_bd, 0), 5);
 
 	-- take maximum size of image into account.
 	local anti_adjust_bd_sz = 0;
-	if anti_adjust_bd and adjust_bd > 0 then
-		local w,h = obj.getpixel(); local mx,my = obj.getinfo("image_max");
-		anti_adjust_bd_sz = math.floor(math_min(adjust_bd, (mx-w)/2, (my-h)/2));
+	if anti_adjust_bd and adjust_bd >= 1 then
+		local w,h = obj.getpixel(); local W,H = obj.getinfo("image_max");
+		anti_adjust_bd_sz = math_min(adjust_bd, (W-w)/2, (H-h)/2);
 	end
 
 	-- apply color key.
-	if anti_adjust_bd_sz > 0 then
-		obj.effect("領域拡張","左",adjust_bd,"上",adjust_bd,"右",adjust_bd,"下",adjust_bd,"塗りつぶし",1);
+	if anti_adjust_bd_sz >= 1 then
+		obj.effect("領域拡張","左",anti_adjust_bd_sz,"上",anti_adjust_bd_sz,"右",anti_adjust_bd_sz,"下",anti_adjust_bd_sz,"塗りつぶし",1);
 	end
 	obj.effect("カラーキー","輝度範囲",range_luma,"色差範囲",range_uv,"境界補正",adjust_bd,
 		"color_yc",encode_yc_from_rgb(col),"status",1)
-	if anti_adjust_bd_sz > 0 then
-		obj.effect("クリッピング","左",adjust_bd,"上",adjust_bd,"右",adjust_bd,"下",adjust_bd);
+	if anti_adjust_bd_sz >= 1 then
+		obj.effect("クリッピング","左",anti_adjust_bd_sz,"上",anti_adjust_bd_sz,"右",anti_adjust_bd_sz,"下",anti_adjust_bd_sz);
 	end
 end
 

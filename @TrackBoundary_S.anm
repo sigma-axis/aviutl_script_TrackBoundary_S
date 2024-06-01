@@ -24,7 +24,7 @@ https://mit-license.org/
 ]]
 
 --
--- VERSION: v1.21
+-- VERSION: v1.22
 --
 
 --------------------------------
@@ -131,7 +131,7 @@ t0=t0 or obj.track0;t1=t1 or obj.track1;t2=t2 or obj.track2;t3=t3 or obj.track3;
 if c0==nil then c0=obj.check0 else c0=c0~=0 and c0~=false end
 t0=math.min(math.max(math.floor(t0),0),16);
 if t0 > 0 then obj.setanchor("_1",t0) end
-require"TrackBoundary_S".conn_color_key(t0,_1,p,c0, t3,_5==1, tonumber(_2) or 0xffffff,t1,t2,tonumber(_3) or 1,_4==1);
+require"TrackBoundary_S".conn_color_key(t0,_1,p,c0, t3,_5==1, tonumber(_2) or 0xffffff,t1,t2,tonumber(_3) or 0,_4==1);
 _0=nil;_1=nil;_2=nil;_3=nil;_4=nil;_5=nil;
 
 @領域ルミナンスキー
