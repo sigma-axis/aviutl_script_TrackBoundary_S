@@ -24,7 +24,7 @@ https://mit-license.org/
 ]]
 
 --
--- VERSION: v1.20-beta1
+-- VERSION: v1.20-beta2
 --
 
 --------------------------------
@@ -738,27 +738,13 @@ local function conn_key_transparent(num_pts,pts,pts_adj,inv, thresh,conn_corner,
 
 	if bd_l>bd_r then
 		if not inv then obj.putpixeldata(bak0) end -- rewind back to the original.
-	elseif inv then
-		-- traverse throughout pixels.
-		for y=0,h-1 do local x=0; while x<w do
-			if flg[x+y*w] ~= 0 then
-				while flg[x+y*w] >= 0 do
-					x=x+1;
-
-					if detect_inner_boundary(x,y, w,h, flg,
-						advance_boundary,alpha_reduced,buf,bak,thresh) then
-						x = x-1; -- switch to the branch for outside the targeted area.
-						break;
-					end
-				end
-			else
-				-- apply the filter to outbounds.
-				bak4[x+y*w] = buf4[x+y*w];
-			end
-			x=x+1;
-		end end
-		obj.putpixeldata(bak0);
 	else
+		if inv then
+			-- swap the write targets.
+			buf0,bak0 = bak0,buf0;
+			buf4,bak4 = bak4,buf4;
+		end
+
 		-- traverse throughout pixels.
 		for y=0,h-1 do local x=0; while x<w do
 			if flg[x+y*w] ~= 0 then
