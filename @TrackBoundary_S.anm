@@ -24,7 +24,7 @@ https://mit-license.org/
 ]]
 
 --
--- VERSION: v1.20-beta1
+-- VERSION: v1.20-beta4
 --
 
 --------------------------------
@@ -108,7 +108,7 @@ _0=nil;_1=nil;_2=nil;_3=nil;
 --track2:彩度範囲,0,256,96,1
 --track3:αしきい値,0,100,0
 --check0:反転,0
---dialog:位置,_1={0,0};透過色/col,_2=0xffffff;境界補正(0-5),_3=1;┗四辺に配慮/chk,_4=1;色彩補正/chk,_5=0;┗透過補正/chk,_6=0;角で隣接扱い/chk,_7=1;PI,_0=nil;
+--dialog:位置,_1={0,0};透過色/col,_2=0xffffff;境界補正(0-5),_3=0;┗四辺に配慮/chk,_4=1;色彩補正/chk,_5=0;┗透過補正/chk,_6=0;角で隣接扱い/chk,_7=1;PI,_0=nil;
 local t0,t1,t2,t3,c0,p;
 if _0 then t0=tonumber(_0[1])t1=tonumber(_0[2])t2=tonumber(_0[3])t3=tonumber(_0[4])c0=_0[0]p=_0.pos end
 t0=t0 or obj.track0;t1=t1 or obj.track1;t2=t2 or obj.track2;t3=t3 or obj.track3;
@@ -124,7 +124,7 @@ _0=nil;_1=nil;_2=nil;_3=nil;_4=nil;_5=nil;_6=nil;_7=nil;
 --track2:色差範囲,0,4096,0,1
 --track3:αしきい値,0,100,0
 --check0:反転,0
---dialog:位置,_1={0,0};透過色/col,_2=0xffffff;境界補正(0-5),_3=1;┗四辺に配慮/chk,_4=1;角で隣接扱い/chk,_5=1;PI,_0=nil;
+--dialog:位置,_1={0,0};透過色/col,_2=0xffffff;境界補正(0-5),_3=0;┗四辺に配慮/chk,_4=1;角で隣接扱い/chk,_5=1;PI,_0=nil;
 local t0,t1,t2,t3,c0,p;
 if _0 then t0=tonumber(_0[1])t1=tonumber(_0[2])t2=tonumber(_0[3])t3=tonumber(_0[4])c0=_0[0]p=_0.pos end
 t0=t0 or obj.track0;t1=t1 or obj.track1;t2=t2 or obj.track2;t3=t3 or obj.track3;
@@ -140,7 +140,7 @@ _0=nil;_1=nil;_2=nil;_3=nil;_4=nil;_5=nil;
 --track2:ぼかし,0,4096,512,1
 --track3:αしきい値,0,100,0
 --check0:反転,0
---dialog:位置,_1={0,0};タイプ(0-3),_2=0;角で隣接扱い/chk,_3=1;PI,_0=nil;
+--dialog:位置,_1={0,0};タイプ(0-3),_2=0;角で隣接扱い/chk,_3=0;PI,_0=nil;
 local t0,t1,t2,t3,c0,p;
 if _0 then t0=tonumber(_0[1])t1=tonumber(_0[2])t2=tonumber(_0[3])t3=tonumber(_0[4])c0=_0[0]p=_0.pos end
 t0=t0 or obj.track0;t1=t1 or obj.track1;t2=t2 or obj.track2;t3=t3 or obj.track3;
