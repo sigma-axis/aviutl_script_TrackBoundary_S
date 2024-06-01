@@ -24,7 +24,7 @@ https://mit-license.org/
 ]]
 
 --
--- VERSION: v1.20-beta3
+-- VERSION: v1.20-beta5
 --
 
 --------------------------------
@@ -772,11 +772,11 @@ local function apply_chroma_key(col, range_chr,range_sat,adjust_bd,adjust_col,ad
 	col = bit_band(0xffffff, col);
 	range_chr = math_min(math_max(range_chr, 0), 256);
 	range_sat = math_min(math_max(range_sat, 0), 256);
-	adjust_bd = math_min(math_max(adjust_bd, 0), 5);
+	adjust_bd = math.floor(math_min(math_max(adjust_bd, 0), 5));
 
 	-- take maximum size of image into account.
 	local anti_adjust_bd_sz = 0;
-	if anti_adjust_bd then
+	if anti_adjust_bd and adjust_bd > 0 then
 		local w,h = obj.getpixel(); local mx,my = obj.getinfo("image_max");
 		anti_adjust_bd_sz = math.floor(math_min(adjust_bd, (mx-w)/2, (my-h)/2));
 	end
@@ -810,11 +810,11 @@ local function apply_color_key(col, range_luma,range_uv,adjust_bd, anti_adjust_b
 	col = bit_band(0xffffff, col);
 	range_luma = math_min(math_max(range_luma, 0), 4096);
 	range_uv = math_min(math_max(range_uv, 0), 4096);
-	adjust_bd = math_min(math_max(adjust_bd, 0), 5);
+	adjust_bd = math.floor(math_min(math_max(adjust_bd, 0), 5));
 
 	-- take maximum size of image into account.
 	local anti_adjust_bd_sz = 0;
-	if anti_adjust_bd then
+	if anti_adjust_bd and adjust_bd > 0 then
 		local w,h = obj.getpixel(); local mx,my = obj.getinfo("image_max");
 		anti_adjust_bd_sz = math.floor(math_min(adjust_bd, (mx-w)/2, (my-h)/2));
 	end
