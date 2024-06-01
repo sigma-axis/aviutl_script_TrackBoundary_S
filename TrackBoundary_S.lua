@@ -24,7 +24,7 @@ https://mit-license.org/
 ]]
 
 --
--- VERSION: v1.20-beta5
+-- VERSION: v1.20
 --
 
 --------------------------------
@@ -786,7 +786,7 @@ local function apply_chroma_key(col, range_chr,range_sat,adjust_bd,adjust_col,ad
 		obj.effect("領域拡張","左",adjust_bd,"上",adjust_bd,"右",adjust_bd,"下",adjust_bd,"塗りつぶし",1);
 	end
 	obj.effect("クロマキー", "色相範囲",range_chr, "彩度範囲",range_sat,
-		"境界補正",adjust_bd, "色彩補正",adjust_col and 1 or 0, "透過補正",adjust_alpha and 1 or 0,
+		"境界補正",adjust_bd, "色彩補正",adjust_col and 1 or 0, "透過補正",(adjust_col and adjust_alpha) and 1 or 0,
 		"color_yc",encode_yc_from_rgb(col), "status",1);
 	if anti_adjust_bd_sz > 0 then
 		obj.effect("クリッピング","左",adjust_bd,"上",adjust_bd,"右",adjust_bd,"下",adjust_bd);
