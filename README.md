@@ -1,6 +1,6 @@
 # TrackBoundary_S AviUtl スクリプト
 
-塗りつぶし2種 / 連結成分切り抜き / 穴埋めができる AviUtl アニメーション効果スクリプト．
+塗りつぶし2種 / 連結成分切り抜き / 穴埋めなどができる AviUtl アニメーション効果スクリプト 8 個セット．
 
 [ダウンロードはこちら．](https://github.com/sigma-axis/aviutl_script_TrackBoundary_S/releases) [紹介動画．](https://www.nicovideo.jp/watch/sm43854186)
 
