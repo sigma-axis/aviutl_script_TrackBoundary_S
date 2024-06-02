@@ -24,12 +24,12 @@ https://mit-license.org/
 ]]
 
 --
--- VERSION: v1.22
+-- VERSION: v1.23
 --
 
 --------------------------------
 
--- check fo LuaJIT.
+-- check for LuaJIT.
 if not jit then
 	local function show_info()
 		obj.setfont("MS UI Gothic",34);
@@ -42,7 +42,7 @@ end
 local ffi = require"ffi";
 local math,obj = math,obj;
 local math_min,math_max=math.min,math.max;
-local bit_band,bit_lshift,bit_arshift=bit.band,bit.lshift,bit.arshift;
+local bit_band,bit_lshift,bit_arshift,bit_tohex=bit.band,bit.lshift,bit.arshift,bit.tohex;
 
 -- determines whether the pixel is to be filled.
 local function is_opaque(I, buf,thresh) return buf[4*I]>thresh end
@@ -246,7 +246,7 @@ local encode_yc do
 		return bit_lshift(bit_band(0x00ff00ff, i32),8)+bit_band(0x00ff00ff, bit_arshift(i32,8));
 	end
 	function encode_yc(y,cb,cr)
-		return ("%04x%08x"):format(swap_bytes(y),swap_bytes(bit_lshift(cb,16)+cr));
+		return bit_tohex(swap_bytes(y),4)..bit_tohex(swap_bytes(bit_lshift(cb,16)+cr),8);
 	end
 end
 local function encode_yc_from_rgb(c)
@@ -704,7 +704,6 @@ local function conn_key_transparent(num_pts,pts,pts_adj,inv, thresh,conn_corner,
 
 	-- prepare buffer.
 	local flg = ffi.new("int8_t[?]", w * h);
-	ffi.fill(flg, w * h);
 	-- flg: 0->none, 1->left (but not right) edge of a closed path, -1->either left or right.
 
 	-- cache the current image as RGBA format.
