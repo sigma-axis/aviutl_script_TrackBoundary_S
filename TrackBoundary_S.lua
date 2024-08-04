@@ -24,7 +24,7 @@ https://mit-license.org/
 ]]
 
 --
--- VERSION: v1.23
+-- VERSION: v1.24
 --
 
 --------------------------------
@@ -798,7 +798,7 @@ end
 --track2:彩度範囲,0,256,96,1
 --track3:αしきい値,0,100,0
 --check0:反転,0
---dialog:位置,_1={0,0};透過色/col,_2=0xffffff;境界補正(0-5),_3=1;┗四辺に配慮/chk,_4=1;色彩補正/chk,_5=0;┗透過補正/chk,_6=0;角で隣接扱い/chk,_7=0;PI,_0=nil;
+--dialog:位置,_1={0,0};透過色/col,_2=0xffffff;境界補正(0-5),_3=1;┗四辺に配慮/chk,_4=0;色彩補正/chk,_5=0;┗透過補正/chk,_6=0;角で隣接扱い/chk,_7=0;PI,_0=nil;
 local function conn_chroma_key(num_pts,pts,pts_adj,inv, thresh,conn_corner, col, range_chr,range_sat,adjust_bd,adjust_col,adjust_alpha, anti_adjust_bd)
 	conn_key_transparent(num_pts,pts,pts_adj,inv, thresh,conn_corner,
 		apply_chroma_key, col, range_chr,range_sat,adjust_bd,adjust_col,adjust_alpha, anti_adjust_bd);
@@ -835,7 +835,7 @@ end
 --track2:色差範囲,0,4096,0,1
 --track3:αしきい値,0,100,0
 --check0:反転,0
---dialog:位置,_1={0,0};透過色/col,_2=0xffffff;境界補正(0-5),_3=1;┗四辺に配慮/chk,_4=1;角で隣接扱い/chk,_5=0;PI,_0=nil;
+--dialog:位置,_1={0,0};透過色/col,_2=0xffffff;境界補正(0-5),_3=1;┗四辺に配慮/chk,_4=0;角で隣接扱い/chk,_5=0;PI,_0=nil;
 local function conn_color_key(num_pts,pts,pts_adj,inv, thresh,conn_corner, col, range_luma,range_uv,adjust_bd, anti_adjust_bd)
 	conn_key_transparent(num_pts,pts,pts_adj,inv, thresh,conn_corner,
 		apply_color_key, col, range_luma,range_uv,adjust_bd, anti_adjust_bd);
